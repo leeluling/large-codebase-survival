@@ -1,9 +1,9 @@
 # Large Codebase Survival Guide
 
-Working with large files (5K+ lines) or complex multi-step tasks using AI coding agents (Claude Code, Cursor, etc.) often leads to context overflow (503 errors, session death). This skill encodes a battle-tested methodology to make steady progress without losing work.
+Working with large files (15K+ lines) or complex multi-step tasks using AI coding agents (Claude Code, Cursor, etc.) often leads to context overflow (503 errors, session death). This skill encodes a battle-tested methodology to make steady progress without losing work.
 
 ## Trigger Conditions
-- Task involves reading or modifying files over 3K lines
+- Task involves reading or modifying files over 5K lines
 - Task requires multiple rounds of changes across a large codebase
 - User mentions 503 concerns, context limits, or session stability
 - Any multi-session project (e.g. UI migration, major refactor)
