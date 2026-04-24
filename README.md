@@ -1,26 +1,46 @@
 # Large Codebase Survival Guide
 
-Working with large files (15K+ lines) or complex multi-step tasks using AI coding agents (Claude Code, Cursor, etc.) often leads to context overflow (503 errors, session death). This skill encodes a battle-tested methodology to make steady progress without losing work.
+> A battle-tested methodology for working with large codebases (15K+ lines) using AI coding agents — without losing your session to context overflow.
 
-## Trigger Conditions
-- Task involves reading or modifying files over 5K lines
-- Task requires multiple rounds of changes across a large codebase
-- User mentions 503 concerns, context limits, or session stability
-- Any multi-session project (e.g. UI migration, major refactor)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## The Core Problem
+---
 
-AI coding agents have a finite context window. When it overflows:
-- The session dies permanently (503 error)
-- No recovery is possible — not even `/clear` helps
-- All unsaved progress in that session is lost
+## The Problem
 
-The overflow is caused by: reading large files into main context, generating long outputs, accumulating tool results, or exploring too many files.
+AI coding agents (Claude Code, Cursor, Windsurf, etc.) are incredibly powerful — until they aren't. When working with large files or complex multi-step tasks, the agent's context window fills up and the session **dies permanently** (HTTP 503). No recovery. No `/clear`. All unsaved progress — gone.
 
-## Prerequisites
-- Git (for incremental commits)
-- A file-based memory/notes system (Claude Code memory, markdown files, etc.)
-- Ability to spawn subagents or child processes
+This guide was born from **months of painful experience** migrating a 15,000+ line Python application from SimpleGUI to WebView using Claude Code. Countless sessions were lost to 503 errors before a reliable methodology emerged.
+
+**The result:** a set of 6 principles that turned a project from "impossible — keeps crashing" into "slow but steady progress, every session."
+
+## TL;DR
+
+| Principle | One-liner |
+|-----------|-----------|
+| 1. Protect the Main Agent | Delegate heavy work to subagents — if they die, you survive |
+| 2. Save Early, Save Often | Commit after every unit of work — assume the session can die anytime |
+| 3. Minimize Context Consumption | Only read what you need, keep output concise |
+| 4. Break Big Tasks into Small Pieces | Decompose until each piece fits in one agent call |
+| 5. Reserve Context Buffer | Don't push to the limit — leave room for recovery |
+| 6. Design for Session Continuity | A new session should pick up exactly where the last one left off |
+
+## Who Is This For?
+
+- Developers using **Claude Code**, **Cursor**, **Windsurf**, or similar AI coding agents
+- Anyone working with **large files** (5K+ lines) or **complex multi-step refactors**
+- Teams that keep losing AI coding sessions to context overflow / 503 errors
+- Anyone who wants to use AI agents on real-world, messy, large codebases — not just toy projects
+
+## Quick Start
+
+**Option 1: Add to your project's `CLAUDE.md`** (for Claude Code users)
+
+Copy [`templates/CLAUDE_SNIPPET.md`](templates/CLAUDE_SNIPPET.md) into your project's `CLAUDE.md` file. Claude Code will follow these rules automatically.
+
+**Option 2: Read and apply manually**
+
+Read the [full methodology](#methodology) below and apply the principles when prompting your AI coding agent.
 
 ---
 
@@ -34,7 +54,7 @@ The main agent is your session's lifeline. It should **orchestrate**, not do hea
 - Never read large files (500+ lines) directly in the main agent — delegate to a subagent
 - Never generate large code blocks in the main agent — have a subagent write to files
 - If a subagent dies from 503, the main agent survives and can spawn a new one
-- Think of the main agent as a project manager, not a developer
+- Think of the main agent as a **project manager**, not a developer
 
 **How to apply (Claude Code):**
 ```
@@ -83,7 +103,7 @@ Every token in context is a finite resource. Spend it wisely.
 
 ### Principle 4: Break Big Tasks into Small Pieces
 
-A 15K-line file rewrite is impossible in one session. A single function rewrite is easy.
+A 15K+ line file rewrite is impossible in one session. A single function rewrite is easy.
 
 **Rules:**
 - Decompose the task into the smallest independently completable units
@@ -94,6 +114,7 @@ A 15K-line file rewrite is impossible in one session. A single function rewrite 
 **Example decomposition:**
 ```
 BAD:  "Migrate the entire UI from SimpleGUI to WebView"
+
 GOOD: 
   - [ ] Pass 1: Extract and list all UI components to migrate
   - [ ] Pass 2: Migrate the main window layout
@@ -123,26 +144,7 @@ Any session can die. A new session should be able to pick up exactly where the l
 - Store key decisions and context in persistent memory, not just conversation
 - At the start of a new session, read the progress file before doing anything else
 
-**Progress file template:**
-```markdown
-# Project: [Name]
-## Status: [In Progress / Blocked / Done]
-## Last updated: [date]
-
-### Completed
-- [x] Component A migrated (commit abc123)
-- [x] Component B migrated (commit def456)
-
-### In Progress
-- [ ] Component C — started, event handlers remaining
-
-### Known Issues
-- Issue X: workaround is Y
-- File Z has a quirk at line N
-
-### Key Decisions
-- Chose approach A over B because ...
-```
+See [`templates/PROGRESS_TRACKER.md`](templates/PROGRESS_TRACKER.md) for a ready-to-use template.
 
 ---
 
@@ -159,25 +161,49 @@ Before each action, ask yourself:
 | Is the task too big for one pass? | Break it down further |
 | Could a new session resume from here? | If not, save context now |
 
-## Known Limitations
-
-1. This methodology trades speed for reliability — progress is slower per session, but cumulative progress is much faster than losing sessions to 503
-2. Subagents have their own context limits — keep individual subagent tasks focused
-3. Some tasks genuinely require seeing a large file holistically — in those cases, have a subagent produce a summary/outline first, then work from the outline
-4. This is optimized for Claude Code but the principles apply to any AI coding agent with context limits
-
 ## Example Session Flow
 
 ```
 Main agent receives: "Migrate function X from old UI to new UI"
 
 1. Main agent creates task list
-2. Main agent spawns subagent: "Read lines 200-350 of main.py, summarize function X's logic in under 100 words"
+2. Main agent spawns subagent:
+   "Read lines 200-350 of main.py, summarize function X's logic in under 100 words"
 3. Subagent returns summary
-4. Main agent spawns subagent: "Write the new implementation of function X to /tmp/new_func_x.py based on this spec: [summary]"
+4. Main agent spawns subagent:
+   "Write the new implementation of function X to /tmp/new_func_x.py based on this spec: [summary]"
 5. Subagent writes file
 6. Main agent integrates the file, runs quick test
 7. Main agent commits: "migrate function X to webview"
 8. Main agent updates progress tracker
 9. Move to next task
 ```
+
+## Known Limitations
+
+1. **Speed vs. reliability trade-off** — progress is slower per session, but cumulative progress is much faster than losing sessions to 503
+2. **Subagent context limits** — subagents have their own limits; keep individual tasks focused
+3. **Holistic understanding** — some tasks require seeing a large file as a whole; have a subagent produce a summary/outline first, then work from the outline
+4. **Agent-specific** — optimized for Claude Code, but the principles apply to any AI coding agent with context limits
+
+## Contributing
+
+Found this useful? Have improvements to suggest?
+
+- Open an issue or pull request
+- Share your own war stories and patterns
+- Star this repo if it saved you from a 503
+
+## Origin Story
+
+This methodology was developed while migrating a production desktop application (I2D client) from SimpleGUI to WebView. The codebase: a single 15,000+ line Python file with complex business logic, UI rendering, device communication, and state management — all intertwined.
+
+Every AI coding session crashed. Multiple agents, multiple days, zero progress. The 503 errors weren't occasional — they were inevitable. The context window simply couldn't hold a file that large.
+
+The breakthrough came from treating the AI agent not as a developer who reads the whole codebase, but as a **project manager** who delegates focused tasks to disposable workers (subagents). Workers can crash. The manager survives. Progress is saved. The next worker picks up where the last one left off.
+
+What was once impossible became routine — slow, methodical, but reliably forward.
+
+---
+
+*Built with hard-won experience and many lost sessions.*
