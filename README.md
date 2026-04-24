@@ -31,19 +31,79 @@ This guide was born from **months of painful experience** migrating a 15,000+ li
 - Teams that keep losing AI coding sessions to context overflow / 503 errors
 - Anyone who wants to use AI agents on real-world, messy, large codebases — not just toy projects
 
-## Quick Start
+## Installation
 
-**Option 1: Add to your project's `CLAUDE.md`** (for Claude Code users)
+### Option A: The simplest way (just paste into CLAUDE.md)
 
-Copy [`templates/CLAUDE_SNIPPET.md`](templates/CLAUDE_SNIPPET.md) into your project's `CLAUDE.md` file. Claude Code will follow these rules automatically.
+No installation needed. Just add the rules to your project:
 
-**Option 2: Use the Survival Mode skill**
+1. Open your project's root directory
+2. Create or edit a file called `CLAUDE.md` (Claude Code reads this automatically at the start of every session)
+3. Copy the contents of [`templates/CLAUDE_SNIPPET.md`](templates/CLAUDE_SNIPPET.md) and paste it into your `CLAUDE.md`
+4. Done — Claude Code will follow these rules automatically
 
-Copy [`survival_mode_skill.md`](survival_mode_skill.md) into your Claude Code skills directory. It activates when you hit 503 errors or ask for "survival mode."
+> **What is `CLAUDE.md`?** It's a file that Claude Code reads at the start of every conversation. Think of it as instructions you give to the AI before it starts working. Any project can have one in its root directory.
 
-**Option 3: Read and apply manually**
+### Option B: Install as a skill (recommended for Claude Code power users)
 
-Read the [full methodology](#methodology) below and apply when prompting your AI coding agent.
+A "skill" in Claude Code is a reusable workflow that activates on demand. To install:
+
+1. **Create a skills directory** in your home folder (if it doesn't exist):
+   ```bash
+   mkdir -p ~/claude_skills
+   ```
+
+2. **Download the skill file:**
+   ```bash
+   curl -o ~/claude_skills/large_codebase_survival.md \
+     https://raw.githubusercontent.com/leeluling/large-codebase-survival/main/survival_mode_skill.md
+   ```
+
+3. **Tell Claude Code about your skills directory.** Add this to your project's `CLAUDE.md`:
+   ```markdown
+   ## Skills
+   Skill files are located in ~/claude_skills/. 
+   When a task matches a skill's trigger condition, read the skill file and follow its steps.
+   ```
+
+4. **Use it** — just tell Claude Code:
+   - "Use survival mode" or "Enter survival mode"
+   - Or it will auto-trigger when you mention working with large files or hit 503 errors
+
+### Option C: Just read it and prompt manually
+
+No setup required. Read the [methodology](#methodology) below and use it as a reference when prompting any AI coding agent. You can say things like:
+
+- "Don't read the whole file — just read lines 200-300 and summarize"
+- "Use a subagent to analyze main.py, don't read it directly"
+- "Commit after each change and update PROGRESS.md"
+
+This works with any AI coding tool, not just Claude Code.
+
+## How to Use
+
+Once installed, you can activate Survival Mode by saying:
+
+```
+"Use survival mode"
+"Enter survival mode"  
+"Help me work on main.py, it's 15000 lines" (auto-triggers)
+```
+
+You can also customize parameters:
+
+```
+"Use survival mode with max_lines_main=500"
+"Use survival mode with auto_commit=false"
+```
+
+What happens next:
+1. The agent creates a `PROGRESS.md` file in your project
+2. It sends a subagent to analyze the target file's structure
+3. It breaks the task into small pieces and lists them in `PROGRESS.md`
+4. It executes each piece one at a time: read → implement → verify → commit
+5. After every few tasks, it checks context health and warns you if a new session is needed
+6. If the session dies, start a new one — it reads `PROGRESS.md` and picks up where it left off
 
 ---
 
