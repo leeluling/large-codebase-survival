@@ -5,8 +5,21 @@
 - User asks for "survival mode" or mentions working with a large file (5K+ lines)
 - User explicitly requests this workflow
 
+## Configuration (optional)
+
+These defaults work for most cases. Adjust if needed:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_lines_main` | 300 | Max lines the main agent can read directly. Increase for larger context models (e.g. 500 for Opus 1M). |
+| `max_subagent_output` | 200 words | Word limit for subagent responses. Increase if summaries are too compressed. |
+| `checkpoint_frequency` | every task | How often to git commit + update PROGRESS.md. Set to "every 2-3 tasks" if commits feel too granular. |
+| `auto_commit` | true | Auto git commit after each task. Set to false if your project has CI hooks or protected branches. |
+
+To override, the user can say e.g. "use survival mode with max_lines_main=500 and auto_commit=false".
+
 ## Prerequisites
-- Git (for incremental commits)
+- Git (for incremental commits, unless auto_commit is false)
 - Claude Code Agent tool (subagents)
 - A progress file will be auto-created in the project directory
 
